@@ -5,19 +5,14 @@ import (
 	"encoding/hex"
 	"fmt"
 	"time"
+
+	"github.com/melvin-n/go-blockchain/models"
+	"github.com/melvin-n/go-blockchain/router"
 )
 
-type Block struct {
-	Index     int
-	Timestamp time.Time
-	BPM       int
-	Hash      string
-	PrevHash  string
-}
+var BlockChain []models.Block
 
-var BlockChain []Block
-
-func createHash(block Block) string {
+func generateHash(block models.Block) string {
 	record := fmt.Sprintf("%d%s%d%s", block.Index, block.Timestamp.String(), block.BPM, block.PrevHash)
 	hashed := sha256.Sum256([]byte(record))
 
@@ -25,12 +20,41 @@ func createHash(block Block) string {
 	return hex.EncodeToString(hashed[:])
 }
 
-func generateNewBlock(timestamp time.Time, bpm int, prevHash string, prevBlock Block) {
-	var newBlock Block
+func generateNewBlock(timestamp time.Time, bpm int, prevHash string, prevBlock models.Block) models.Block {
+	var newBlock models.Block
 
 	newBlock.Index = prevBlock.Index + 1
 	newBlock.Timestamp = time.Now()
 	newBlock.BPM = bpm
 	newBlock.PrevHash = prevBlock.Hash
-	newBlock.Hash = createHash(newBlock)
+	newBlock.Hash = generateHash(newBlock)
+
+	return newBlock
+}
+
+func validateBlock(oldBlock, newBlock models.Block) (bool, error) {
+	if oldBlock.Index+1 != newBlock.Index {
+		err := fmt.Errorf("Block index error")
+		return false, err
+	}
+	if oldBlock.Hash != newBlock.PrevHash {
+		err := fmt.Errorf("Hash history error")
+		return false, err
+	}
+	if generateHash(newBlock) != newBlock.Hash {
+		err := fmt.Errorf("Hashing error")
+		return false, err
+	}
+	return true, nil
+}
+
+//checks for latest version of blockchain, replaces if newer version is available
+func refreshChain(newBlocks []models.Block) {
+	if len(newBlocks) > len(BlockChain) {
+		BlockChain = newBlocks
+	}
+}
+
+func main() {
+	router.Run()
 }
