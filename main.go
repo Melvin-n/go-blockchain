@@ -7,10 +7,9 @@ import (
 	"time"
 
 	"github.com/melvin-n/go-blockchain/models"
-	"github.com/melvin-n/go-blockchain/router"
 )
 
-var BlockChain []models.Block
+var Blockchain []models.Block
 
 func generateHash(block models.Block) string {
 	record := fmt.Sprintf("%d%s%d%s", block.Index, block.Timestamp.String(), block.BPM, block.PrevHash)
@@ -50,11 +49,11 @@ func validateBlock(oldBlock, newBlock models.Block) (bool, error) {
 
 //checks for latest version of blockchain, replaces if newer version is available
 func refreshChain(newBlocks []models.Block) {
-	if len(newBlocks) > len(BlockChain) {
-		BlockChain = newBlocks
+	if len(newBlocks) > len(Blockchain) {
+		Blockchain = newBlocks
 	}
 }
 
 func main() {
-	router.Run()
+	Run()
 }

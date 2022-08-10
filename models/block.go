@@ -9,3 +9,7 @@ type Block struct {
 	Hash      string
 	PrevHash  string
 }
+
+type Message struct {
+	BPM int `json:"bpm"`
+}
