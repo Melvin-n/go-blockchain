@@ -6,8 +6,8 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"time"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 	"github.com/melvin-n/go-blockchain/models"
@@ -61,15 +61,26 @@ func writeBlockchain(w http.ResponseWriter, r *http.Request) {
 
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&m); err != nil {
-		//TODO return error with error request body
-		return
-	}
-	newBlock := models.Block{
-		Index:     Blockchain[len(Blockchain)-1].Index + 1,
-		Timestamp: time.Now(),
-		BPM:       m.BPM,
-		Hash:      generateHash(newBlock),
-		PrevHash:  Blockchain[len(Blockchain)-1].Hash,
+		w.WriteHeader(400)
+		err = fmt.Errorf("Unable to decode post body: %s", r.Body)
+		fmt.Printf(err.Error())
+
 	}
 
+	newBlock := generateNewBlock(m.BPM, Blockchain[len(Blockchain)-1])
+
+	ok, err := validateBlock(Blockchain[len(Blockchain)-1], newBlock)
+	if err != nil {
+		w.WriteHeader(400)
+		err = fmt.Errorf("Unable to validate block: %s", err.Error())
+		fmt.Printf(err.Error())
+	}
+
+	if ok {
+		Blockchain = append(Blockchain, newBlock)
+		refreshChain(Blockchain)
+		w.WriteHeader(200)
+		spew.Dump(Blockchain)
+		json.NewEncoder(w).Encode(Blockchain)
+	}
 }

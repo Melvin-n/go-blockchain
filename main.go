@@ -4,8 +4,11 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"log"
 	"time"
 
+	"github.com/davecgh/go-spew/spew"
+	"github.com/joho/godotenv"
 	"github.com/melvin-n/go-blockchain/models"
 )
 
@@ -19,7 +22,7 @@ func generateHash(block models.Block) string {
 	return hex.EncodeToString(hashed[:])
 }
 
-func generateNewBlock(timestamp time.Time, bpm int, prevHash string, prevBlock models.Block) models.Block {
+func generateNewBlock(bpm int, prevBlock models.Block) models.Block {
 	var newBlock models.Block
 
 	newBlock.Index = prevBlock.Index + 1
@@ -55,5 +58,15 @@ func refreshChain(newBlocks []models.Block) {
 }
 
 func main() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	go func() {
+		genesisBlock := models.Block{Index: 0, Timestamp: time.Now(), BPM: 0, Hash: "", PrevHash: ""}
+		spew.Dump(genesisBlock)
+		Blockchain = append(Blockchain, genesisBlock)
+	}()
 	Run()
 }
